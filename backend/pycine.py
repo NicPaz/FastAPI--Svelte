@@ -101,7 +101,10 @@ def favorite_movie(user_id: int, favorite_movie: schemas.FavoriteMovieCreate, db
     user_favorite_movies = crud.get_favorite_movies(db, user_id=user_id)
     for movie in user_favorite_movies:
         if movie.movie_id == favorite_movie.movie_id:
-            return movie
+            raise HTTPException(
+            status_code=303,
+            detail="movie is alredy favorite"
+        )
     return crud.create_favorite_movie(db=db, favorite_movie=favorite_movie, user_id=user_id)
 
 
