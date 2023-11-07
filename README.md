@@ -1,1 +1,1 @@
-# FastAPI2
+# Fast API & Svelte
