@@ -33,3 +33,11 @@ def create_favorite_movie(db: Session, favorite_movie: schemas.FavoriteMovieCrea
 def get_favorite_movies(db: Session, user_id: int):
     return db.query(models.FavoriteMovie).filter(models.FavoriteMovie.user_id == user_id).all()
 
+
+def delete_favorite_movie(db: Session, favorite_movie_id: int):
+    favorite_movie = db.query(models.FavoriteMovie).filter(models.FavoriteMovie.id == favorite_movie_id).first()
+    if favorite_movie:
+        db.delete(favorite_movie)
+        db.commit()
+        return favorite_movie
+    return None

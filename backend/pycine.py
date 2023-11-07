@@ -103,7 +103,7 @@ def favorite_movie(user_id: int, favorite_movie: schemas.FavoriteMovieCreate, db
         if movie.movie_id == favorite_movie.movie_id:
             raise HTTPException(
             status_code=303,
-            detail="movie is alredy favorite"
+            detail="Movie is alredy favorite"
         )
     return crud.create_favorite_movie(db=db, favorite_movie=favorite_movie, user_id=user_id)
 
@@ -112,6 +112,16 @@ def favorite_movie(user_id: int, favorite_movie: schemas.FavoriteMovieCreate, db
 def get_favorite_movies(user_id: int, db: Session = Depends(get_db)):
     movies = crud.get_favorite_movies(db, user_id=user_id)
     return movies
+
+@app.delete("/unfavorite_movie/{user_id}", response_model=schemas.FavoriteMovie)
+def unfavorite_movie(user_id: int, favorite_movie: schemas.FavoriteMovieCreate, db: Session = Depends(get_db)):
+    user_favorite_movies = crud.get_favorite_movies(db, user_id=user_id)
+    for movie in user_favorite_movies:
+        if movie.movie_id == favorite_movie.movie_id:
+            return crud.delete_favorite_movie(db, movie.id)
+    
+    raise HTTPException(status_code=400, detail="Movie not found in favorites")
+
 
 # PROCURAR FILME PELO ID
 
