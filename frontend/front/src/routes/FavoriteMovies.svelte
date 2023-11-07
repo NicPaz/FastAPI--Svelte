@@ -29,12 +29,12 @@
           movie_id: movie_id,
         }),
       });
-
+     
       if (res.ok) {
         alert('Filme removido dos favoritos com sucesso!');
         promise= getFavoriteMovies();
-        
-      } else {
+      }
+      else {
         const text = await res.json();
         throw new Error(text);
       }

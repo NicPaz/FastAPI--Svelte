@@ -19,10 +19,13 @@
             movie_id: movieId,
           }),
         });
-
         if (res.ok) {
           alert('Filme favoritado com sucesso!');
-        } else {
+        } 
+        else if(res.status == 303){
+          alert('O filme já foi favoritado.');
+        }
+        else {
           const text = await res.json();
           throw new Error(text);
         }
