@@ -94,7 +94,7 @@ async def update_user(
 def movie():
     return ("test")
 
-# FAVORITAR
+# =========== FAVORITAR FILME
 
 @app.post("/favorite_movie/{user_id}", response_model=schemas.FavoriteMovie)
 def favorite_movie(user_id: int, favorite_movie: schemas.FavoriteMovieCreate, db: Session = Depends(get_db)):
@@ -106,7 +106,6 @@ def favorite_movie(user_id: int, favorite_movie: schemas.FavoriteMovieCreate, db
             detail="Movie is alredy favorite"
         )
     return crud.create_favorite_movie(db=db, favorite_movie=favorite_movie, user_id=user_id)
-
 
 @app.get("/favorite_movies/{user_id}", response_model=List[schemas.FavoriteMovie])
 def get_favorite_movies(user_id: int, db: Session = Depends(get_db)):
@@ -122,8 +121,36 @@ def unfavorite_movie(user_id: int, favorite_movie: schemas.FavoriteMovieCreate, 
     
     raise HTTPException(status_code=400, detail="Movie not found in favorites")
 
+# ============ FAVORITAR ARTISTA
 
-# PROCURAR FILME PELO ID
+@app.post("/favorite_artist/{user_id}", response_model=schemas.FavoriteArtist)
+def favorite_artist(user_id: int, favorite_artist: schemas.FavoriteArtistCreate, db: Session = Depends(get_db)):
+    user_favorite_artist = crud.get_favorite_artist(db, user_id=user_id)
+    for artist in user_favorite_artist:
+        if artist.artist_id == favorite_artist.artist_id:
+            raise HTTPException(
+            status_code=303,
+            detail="Artist is alredy favorite"
+        )
+    return crud.create_favorite_artist(db=db, favorite_artist=favorite_artist, user_id=user_id)
+
+
+@app.get("/favorite_artist/{user_id}", response_model=List[schemas.FavoriteArtist])
+def get_favorite_artist(user_id: int, db: Session = Depends(get_db)):
+    artist = crud.get_favorite_artist(db, user_id=user_id)
+    return artist
+
+@app.delete("/unfavorite_artist/{user_id}", response_model=schemas.FavoriteArtist)
+def unfavorite_artist(user_id: int, favorite_artist: schemas.FavoriteArtistCreate, db: Session = Depends(get_db)):
+    user_favorite_artist = crud.get_favorite_artist(db, user_id=user_id)
+    for artist in user_favorite_artist:
+        if artist.artist_id == favorite_artist.artist_id:
+            return crud.delete_favorite_artist(db, artist.id)
+    
+    raise HTTPException(status_code=400, detail="Artist not found in favorites")
+
+
+# ========== PROCURAR FILME PELO ID
 
 @app.get("/movie/{filme_id}")
 async def get_filme_id(filme_id: int):
@@ -136,17 +163,40 @@ async def get_filme_id(filme_id: int):
     }
     return results
 
-# =============
+# ============= PROCURAR ARTISTA PELO ID
 
-@app.get("/artistas")
-async def get_artist(limit=1):
-    data = get_json("https://api.themoviedb.org/3/person/1100?language=en-US")
+@app.get("/artist/{artist_id}")
+async def get_artist_id(artist_id: int):
+    data = get_json(f"https://api.themoviedb.org/3/person/{artist_id}?language=en-US")
+    artist = data
     results = {
-        'name': data['name'],
-        'biography': data['biography'],
-        'image':f"http://image.tmdb.org/t/p/w185{data['profile_path']}"
+        'id': artist['id'],
+        'name': artist['name'],
+        'biography': artist['biography'],
+        'birthday': artist['birthday'],
+        'popularity': artist['popularity'],
+        'image': f"http://image.tmdb.org/t/p/w185{artist['profile_path']}"
     }
     return results
+
+# ============= LISTAR ARTISTAS PELA POPULARIDADE
+
+@app.get("/artistas")
+async def get_artist(limit=3):
+    data = get_json("https://api.themoviedb.org/3/person/popular?language=en-US")
+    results = data['results']
+    filtro = []
+    for artist in results:
+        filtro.append ({
+            'id': artist['id'],
+            'name': artist['name'],
+            'image':f"http://image.tmdb.org/t/p/w185{artist['profile_path']}",
+            'rank': artist['popularity']
+        })
+    filtro.sort(reverse= True, key=lambda artist:artist['rank'])
+    return filtro
+
+# ============= LISTAR FILMES
 
 @app.get("/filmes")
 async def filmes_populares(limit=3):
@@ -162,17 +212,17 @@ async def filmes_populares(limit=3):
     return filtro
 
 
-# ================== ATIVIDADE 01 ========================
+# ================== BUSCA FILMES PELO NOME ========================
 @app.get("/filme/{title}")
 async def find_movie(title: str):
-    data = get_json(f"https://api.themoviedb.org/search/movie?query={title}&language=en-US")
+    data = get_json(f"https://api.themoviedb.org/3/search/movie?query={title}&language=en-US")
     results = data['results']
     filtro = []
     for movie in results:
         filtro.append({
             'id': movie['id'],
             'title': movie['title'],
-            'original title': movie['original_title'],
+            'image': f"http://image.tmdb.org/t/p/w185{movie['poster_path']}",
             'rank': movie['popularity']
         })
     filtro.sort(reverse= True, key=lambda movie:movie['rank'])
@@ -196,7 +246,7 @@ async def find_movie_byartist(personId: int):
 
 #======================================================
 
-# retorna lista de artistas em ordem descrescente de popularidade
+# BUSCA ARTISTA PELO NOME EM ORDEM DESCRESCENTE DE POPULARIDADE
 @app.get("/artista/{name}")
 async def get_artista(name: str):
     data = get_json(
@@ -208,6 +258,7 @@ async def get_artista(name: str):
         filtro.append({
             'id': artist['id'],
             'name': artist['name'],
+            'image': f"http://image.tmdb.org/t/p/w185{artist['profile_path']}",
             'rank': artist['popularity']
         })
     filtro.sort(reverse= True, key=lambda artist:artist['rank'])

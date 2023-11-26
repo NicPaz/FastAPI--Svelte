@@ -41,3 +41,24 @@ def delete_favorite_movie(db: Session, favorite_movie_id: int):
         db.commit()
         return favorite_movie
     return None
+
+# FAVORITAR ARTISTA
+
+def create_favorite_artist(db: Session, favorite_artist: schemas.FavoriteArtistCreate, user_id: int):
+    db_favorite_artist = models.FavoriteArtist(artist_id=favorite_artist.artist_id, user_id=user_id)
+    db.add(db_favorite_artist)
+    db.commit()
+    db.refresh(db_favorite_artist)
+    return db_favorite_artist
+
+def get_favorite_artist(db: Session, user_id: int):
+    return db.query(models.FavoriteArtist).filter(models.FavoriteArtist.user_id == user_id).all()
+
+
+def delete_favorite_artist(db: Session, favorite_artist_id: int):
+    favorite_artist = db.query(models.FavoriteArtist).filter(models.FavoriteArtist.id == favorite_artist_id).first()
+    if favorite_artist:
+        db.delete(favorite_artist)
+        db.commit()
+        return favorite_artist
+    return None

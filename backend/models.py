@@ -14,3 +14,9 @@ class FavoriteMovie(Base):
     id = Column(Integer, primary_key=True, index=True)
     movie_id = Column(Integer, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), index=True)
+
+class FavoriteArtist(Base):
+    __tablename__ = "favorite_artist"
+    id = Column(Integer, primary_key=True, index=True)
+    artist_id = Column(Integer, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), index=True)

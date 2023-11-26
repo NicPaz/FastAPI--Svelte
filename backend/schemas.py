@@ -25,3 +25,16 @@ class FavoriteMovie(FavoriteMovieBase):
 
     class Config:
         orm_mode = True
+
+class FavoriteArtistBase(BaseModel):
+    artist_id: int
+
+class FavoriteArtistCreate(FavoriteArtistBase):
+    pass
+
+class FavoriteArtist(FavoriteArtistBase):
+    id: int
+    user_id: int
+
+    class Config:
+        orm_mode = True
